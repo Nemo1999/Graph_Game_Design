@@ -4,19 +4,21 @@ import copy
 import random
 # undirected graph
 
+
 class Graph:
     def __init__(self) -> None:
-        self.edges : Dict[str, Set[str]] = defaultdict(set) # map each node index to the set of its neibours' indexes
-        self.nodes : Set[str] = set()
+        # map each node index to the set of its neibours' indexes
+        self.edges: Dict[str, Set[str]] = defaultdict(set)
+        self.nodes: Set[str] = set()
 
     def node(self, node: str) -> None:
         self.nodes.add(node)
 
-    def edge(self, node1: str, node2:str) -> None:
+    def edge(self, node1: str, node2: str) -> None:
         self.edges[node1].add(node2)
         self.edges[node2].add(node1)
 
-    def edgeDel(self, node1:str , node2: str) -> None:
+    def edgeDel(self, node1: str, node2: str) -> None:
         self.edges[node1].remove(node2)
         self.edges[node2].remove(node1)
 
@@ -26,9 +28,9 @@ class Graph:
             for n in self.edges[node]:
                 self.edges[n].remove(node)
             del self.edges[node]
-    
-    def addEdges(self, pairs: Iterable[Tuple[str,str]]) -> None:
-        map(lambda n1, n2: self.edge(n1,n2), pairs)
+
+    def addEdges(self, pairs: Iterable[Tuple[str, str]]) -> None:
+        map(lambda n1, n2: self.edge(n1, n2), pairs)
 
     def neighbors(self, node: str) -> None:
         return self.edges[node]
@@ -36,7 +38,7 @@ class Graph:
     def degree(self, node: str) -> None:
         return len(self.edges[node])
 
-    def clone(self) -> "Graph": 
+    def clone(self) -> "Graph":
         return copy.deepcopy(self)
 
 
@@ -45,7 +47,7 @@ def randomWSGraph(n=16, k=4, link_rewiring_prob=0.0):
     # k should be even
     assert k % 2 == 0
     ws = Graph()
-    
+
     for i in range(n):
         ws.node(str(i))
 
@@ -54,7 +56,7 @@ def randomWSGraph(n=16, k=4, link_rewiring_prob=0.0):
             j = (i + dk) % n
             if random.random() < link_rewiring_prob:
                 # change j to a random node that is not already connected to i
-                j = random.choice(list(n for n in ws.nodes if n not in ws.neighbors(str(i)) and n != str(i)))
-            ws.edge(str(i),str(j))
+                j = random.choice(
+                    list(n for n in ws.nodes if n not in ws.neighbors(str(i)) and n != str(i)))
+            ws.edge(str(i), str(j))
     return ws
-
