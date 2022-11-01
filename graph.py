@@ -51,11 +51,10 @@ def randomWSGraph(n=16, k=4, link_rewiring_prob=0.0):
 
     for i in range(n):
         for dk in range(1, k//2+1):
-            j = i + dk
-            if random.random() > link_rewiring_prob:
+            j = (i + dk) % n
+            if random.random() < link_rewiring_prob:
                 # change j to a random node that is not already connected to i
-                j = random.choice(list(n for n in ws.nodes if n not in ws.neighbors(str(i))))
+                j = random.choice(list(n for n in ws.nodes if n not in ws.neighbors(str(i)) and n != str(i)))
             ws.edge(str(i),str(j))
-    
     return ws
 
