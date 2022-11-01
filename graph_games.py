@@ -1,4 +1,4 @@
-from typing import Set, Dict, Any, Callable, Iterator
+from typing import Set, Dict, Any, Callable, Iterator, Optional, Union
 from collections import defaultdict
 import itertools
 import random
@@ -214,3 +214,47 @@ class AsymmetricIDSGame(K_DominationGame):
         else:
             ans = 0
         return ans
+
+class MaximalMatchingGame(Game): 
+    """
+    Maximal Matching Game
+    """
+    def __init__(self, graph: graph.Graph) -> None:
+            self.graph = graph
+            self.player = graph.nodes
+            # strategy Profile
+            # all players' action are initialized to be None 
+            self.strategy: Dict[Player, Optional[Player]]=defaultdict(lambda:None)
+    def randomInit() -> None: 
+        """it is suspected that"""        
+    def checkMatching(self)-> bool:
+        pass
+    def checkMaximal(self)-> bool:
+        pass
+    def matched(self, player: str)-> bool:
+        mate = self.strategy[player]
+        return mate != None and self.strategy[mate] == player
+    def robbable(self, robber: str, victum: str)-> bool: 
+        if victum not in self.graph.neighbors(robber): 
+            return False
+        victum_mate = self.strategy[victum]
+        if not victum_mate or self.strategy[victum_mate] != victum: 
+            return False
+        else:
+            return self.graph.degree(victum) > self.graph.degree(robber)
+
+    def getPlayers(self) -> Set[str]:
+        return self.players.copy()
+    
+    def getAction(self, player: Player) -> Optional[str]: 
+        return self.strategy[player]
+
+    def getPossibleActions(self, player: Player) -> Set[Union[None, str]]:
+        return self.graph.neighbors(player).copy().add(None)
+
+    def getProfile(self) -> Dict[Player, Action]:
+        return self.strategy.copy()
+
+    def getUtil(self, player: Player) -> float:
+        pass 
+    
