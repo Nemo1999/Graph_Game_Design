@@ -50,6 +50,35 @@ def bestResponseSolver(g: Game ) -> int:
             return total_iters
         
 
+if __name__ == '__main__' :
+    import graph
+    from graph_games import K_DominationGame, AsymmetricIDSGame
+    for game in ["K_DominationGame", "AsymmectricIDSGame"]: 
+        print("-"*30)
+        print(f'Game = {game}')
+        print(f'{"rewiring_prob":15}, {"move_counts per node":15}, {"cardinality":15}')
+        for rewire_prob_times_10 in range(0, 10, 2):
+            rewiring_prob = rewire_prob_times_10 / 10
+            move_counts = []
+            cardinalities = []
+            for i in range(100):
+                g = graph.randomWSGraph(n=30, k=4, link_rewiring_prob=rewiring_prob)
+                if game == "K_DominationGame":
+                    gg = K_DominationGame(2, g) # run with k = 2
+                else: 
+                    gg = AsymmetricIDSGame(g)
+                
+                move_count = gg.solve(bestResponseSolver)
+                cardinality = gg.dominationSetCardinality()
+                move_counts.append(move_count)
+                cardinalities.append(cardinality)
 
+                if game == "K_DominationGame":
+                    assert gg.checkDomination()
+                else:
+                    assert gg.checkDomination()
+                    assert gg.checkIndependence() 
+            print(f'{rewiring_prob:15.2f}, {sum(move_counts)/100 / 30:15.2f}, {sum(cardinalities)/100:15.2f}')
+                    
 
 

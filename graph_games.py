@@ -164,7 +164,7 @@ class K_DominationGame(Game):
         assert self.checkDomination() ,"The game hasn't been solved yet, the current solution is not k-domination set"
         return len(self.dominators)
 
-class asymmetricIDSGame(K_DominationGame):
+class AsymmetricIDSGame(K_DominationGame):
     """
     Asymmectric Minimum-Dominating-Set-based Independent Dominateding Set Game
     
