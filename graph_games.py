@@ -1,5 +1,6 @@
 from typing import Set, Dict, Any, Callable, Iterator
 from collections import defaultdict
+import itertools
 import random
 import graph
 
@@ -162,3 +163,48 @@ class K_DominationGame(Game):
     def dominationSetCardinality(self) -> int:
         assert self.checkDomination() ,"The game hasn't been solved yet, the current solution is not k-domination set"
         return len(self.dominators)
+
+class asymmetricIDSGame(K_DominationGame):
+    """
+    Asymmectric Minimum-Dominating-Set-based Independent Dominateding Set Game
+    
+    we use K_DominationGame as base class and overwrite the following functions:
+    - getUtil()
+    - checkDomination()
+    we also add a new function:
+    - checkIndependence()
+
+    """
+    def __init__(self,  graph: graph.Graph, alpha=2, beta=1) -> None:
+        # set k = 1
+        super().__init__(1, graph, alpha, beta)
+        # make sure gamma larger than maximum degree times alpha
+        maxDegree = max(self.graph.degree(p) for p in self.graph.nodes)
+        self.gamma = maxDegree * alpha + 1
+    
+    def checkDomination(self) -> bool:
+        """ check whether dominaion condition is met
+            it turns out that single domination is equivilent to k-domination with k = 1
+        """
+        return super().checkDomination()
+    
+    def checkIndependence(self) -> bool:
+        """check that the dominaotors are independent"""
+        return all(self.graph.neighbors(d).isdisjoint(self.dominators) for d in self.dominators)
+
+    def getUtil(self, player: str) -> float:
+        def g(i):
+            numDominatorIncludeSelf = self.numDominator[i]
+            numDominatorIncludeSelf += 1 if i in self.dominators else 0
+            return self.alpha if  numDominatorIncludeSelf == 1 else 0
+        
+        if player in self.dominators:
+            # gain for dominating neighboring nodes
+            ans = sum(g(i) for i in itertools.chain(self.graph.neighbors(player),[player]))  
+            # penalty for being a dominator
+            ans -= self.beta 
+            # panelty for violating independence, (assymetric, only cares neighbors with higher degrees) 
+            ans -= sum(self.gamma for n in self.graph.neighbors(player) if n in self.dominators)
+        else: 
+            ans = 0
+        return ans
