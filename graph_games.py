@@ -219,29 +219,69 @@ class MaximalMatchingGame(Game):
     """
     Maximal Matching Game
     """
-    def __init__(self, graph: graph.Graph) -> None:
-            self.graph = graph
-            self.player = graph.nodes
-            # strategy Profile
-            # all players' action are initialized to be None 
-            self.strategy: Dict[Player, Optional[Player]]=defaultdict(lambda:None)
-    def randomInit() -> None: 
-        """it is suspected that"""        
+    def __init__(self, graph: graph.Graph, deg_penalty=True, robbing_reward=True) -> None:
+
+       
+
+        assert not (not deg_penalty and robbing_reward) , "robbing strategy only works when deg_penelty is used"
+        self.robbing_reward = robbing_reward
+        self.deg_penalty = deg_penalty
+
+
+        self.graph = graph
+        self.players = graph.nodes
+        self.maxDeg = max(self.graph.degree(p) for p in self.players)
+
+        self.alpha = 8
+        self.beta = 6
+        self.gamma = 4 
+        self.delta = 2
+        # strategy Profile
+        # all players' action are initialized to be None 
+        self.strategy: Dict[Player, Optional[Player]]=defaultdict(lambda:None)
+
+    def randomInit(self, act_prob= 0.5) -> None: 
+        """it is suspected that no random initilization would run faster"""
+        for p in self.players:
+            # choose a random neighbor with probability 0.5
+            if random.random() < act_prob:
+                self.strategy[p] = random.choice(list(self.graph.neighbors(p)))
+
     def checkMatching(self)-> bool:
-        pass
+        """check if current strategy forms a Valid Matching"""
+        for p in self.players:
+            if self.strategy[p]:
+                if self.strategy[self.strategy[p]] != p:
+                    return False
+        return True
+
     def checkMaximal(self)-> bool:
-        pass
+        """check if current strategy is Maximal"""
+        for p in filter(lambda x: not self.matched(x), self.players):
+            if any(not self.matched(n) for n in self.graph.neighbors(p)):
+                return False
+        return True
+
+    def checkMaximalMatching(self)-> bool: 
+        """check if current strategy is Maximal Matching"""
+        return self.checkMatching() and self.checkMaximal()
+
     def matched(self, player: str)-> bool:
+        if not player: 
+            return False
         mate = self.strategy[player]
         return mate != None and self.strategy[mate] == player
+
     def robbable(self, robber: str, victum: str)-> bool: 
+        if not robber or not victum: 
+            return False
         if victum not in self.graph.neighbors(robber): 
             return False
         victum_mate = self.strategy[victum]
         if not victum_mate or self.strategy[victum_mate] != victum: 
             return False
         else:
-            return self.graph.degree(victum) > self.graph.degree(robber)
+            return self.graph.degree(victum_mate) > self.graph.degree(robber)
 
     def getPlayers(self) -> Set[str]:
         return self.players.copy()
@@ -250,11 +290,54 @@ class MaximalMatchingGame(Game):
         return self.strategy[player]
 
     def getPossibleActions(self, player: Player) -> Set[Union[None, str]]:
-        return self.graph.neighbors(player).copy().add(None)
+        actions = self.graph.neighbors(player).copy()
+        actions.add(None)
+        return actions
 
     def getProfile(self) -> Dict[Player, Action]:
         return self.strategy.copy()
 
     def getUtil(self, player: Player) -> float:
-        pass 
+        util = 0
+        if self.matched(player):
+            util += self.alpha
+        elif self.strategy[player] and not self.matched(self.strategy[player]):
+            util += self.beta
+        elif self.strategy[player] == None: 
+            util += self.delta
+
+        def deg_penalty(n):
+            return (self.maxDeg - self.graph.degree(n)) / self.maxDeg
+
+        if self.deg_penalty:
+            # match with proposed neigbour with lower degree
+            util -= sum(deg_penalty(n) for n in self.graph.neighbors(player) if self.strategy[n] == player and self.strategy[player] != n)
+            # proposed to the unmatched neighbor with lower degree
+            util -= sum(deg_penalty(n) for n in self.graph.neighbors(player) if not self.matched(n) and self.strategy[player] != n)
+            # rob the robbable neighbor with lower degree
+            util -= sum(deg_penalty(n) for n in self.graph.neighbors(player) if self.robbable(player, n) and self.strategy[player]!= n)
+
+        if self.robbing_reward and self.deg_penalty: 
+            """ robbing only work with deg_penalty == True, otherwise, NE may not be a Valid Matching because matched neighbors won't be robbed"""
+            if self.robbable(player, self.strategy[player]):
+                util += self.gamma
+        return util
     
+    def getUtils(self, player: str, actions: Iterator[Optional[str]]) -> Iterator[float]:
+        original_action = self.getAction(player)
+        utils = []
+        for a in actions:
+            self.setAction(player, a)
+            utils.append(self.getUtil(player))
+        self.setAction(player, original_action)
+        return utils
+    
+    def setAction(self, player: str, action: Optional[str]) -> None:
+        assert action in self.getPossibleActions(player)  
+        self.strategy[player] = action
+
+    def setProfile(self, profile: Dict[str , Optional[str]]) -> None:
+        for p in profile.keys():
+            self.setAction(p, profile[p])
+    
+
