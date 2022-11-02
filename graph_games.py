@@ -247,6 +247,10 @@ class MaximalMatchingGame(Game):
             if random.random() < act_prob:
                 self.strategy[p] = random.choice(list(self.graph.neighbors(p)))
 
+    def numMatchingPairs(self) -> int:
+        """return number of matching pairs"""
+        return sum(1 for p in self.players if self.matched(p)) // 2
+
     def checkMatching(self)-> bool:
         """check if current strategy forms a Valid Matching"""
         for p in self.players:
