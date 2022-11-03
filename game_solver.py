@@ -12,7 +12,8 @@ def bestResponseSingleStep(g: Game, population: List[Player]) -> Optional[Player
     solve for NE using best response path for single step
     Input: 
         - g: an instance of Game in graph_game
-        - population: a list containing all players in Game g, the algorithm will check possible update using best response in the given order
+        - population: a list containing all players in Game g, the algorithm will check 
+            possible update using best response in the given order
     Return: 
         None or player:
             - if the return value is None, means g is already in Nash Equilibrium
@@ -41,7 +42,8 @@ def bestResponseSolver(g: Game) -> int:
     Input:
         A instance of Game defined in graph_games 
     Return:  
-        number of iterations during the solving, each iteration we overwrite the action of a player with his best response. 
+        number of iterations during the solving, 
+        each iteration we overwrite the action of a player with his best response. 
     """
     population = list(g.getPlayers())
     for total_iters in itertools.count(start=1, step=1):
